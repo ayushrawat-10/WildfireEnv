@@ -4,77 +4,44 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Wildfireenvironment Environment Client."""
+"""Wildfire Environment Client."""
 
-from typing import Dict
-
+from typing import Dict, Any
 from openenv.core import EnvClient
 from openenv.core.client_types import StepResult
 from openenv.core.env_server.types import State
 
-from .models import WildfireenvironmentAction, WildfireenvironmentObservation
+from models import WildfireAction, WildfireObservation
 
-
-class WildfireenvironmentEnv(
-    EnvClient[WildfireenvironmentAction, WildfireenvironmentObservation, State]
-):
+class WildfireClient(EnvClient[WildfireAction, WildfireObservation, State]):
     """
-    Client for the Wildfireenvironment Environment.
-
-    This client maintains a persistent WebSocket connection to the environment server,
-    enabling efficient multi-step interactions with lower latency.
-    Each client instance has its own dedicated environment session on the server.
-
-    Example:
-        >>> # Connect to a running server
-        >>> with WildfireenvironmentEnv(base_url="http://localhost:8000") as client:
-        ...     result = client.reset()
-        ...     print(result.observation.echoed_message)
-        ...
-        ...     result = client.step(WildfireenvironmentAction(message="Hello!"))
-        ...     print(result.observation.echoed_message)
-
-    Example with Docker:
-        >>> # Automatically start container and connect
-        >>> client = WildfireenvironmentEnv.from_docker_image("wildfireEnvironment-env:latest")
-        >>> try:
-        ...     result = client.reset()
-        ...     result = client.step(WildfireenvironmentAction(message="Test"))
-        ... finally:
-        ...     client.close()
+    Client for the Wildfire Environment.
+    Maintains connection to the server for inference actions.
     """
 
-    def _step_payload(self, action: WildfireenvironmentAction) -> Dict:
-        """
-        Convert WildfireenvironmentAction to JSON payload for step message.
-
-        Args:
-            action: WildfireenvironmentAction instance
-
-        Returns:
-            Dictionary representation suitable for JSON encoding
-        """
+    def _step_payload(self, action: WildfireAction) -> Dict:
         return {
-            "message": action.message,
+            "division_id": action.division_id,
+            "crew_id": action.crew_id,
+            "action_type": action.action_type,
+            "target_cell": action.target_cell,
         }
 
-    def _parse_result(self, payload: Dict) -> StepResult[WildfireenvironmentObservation]:
-        """
-        Parse server response into StepResult[WildfireenvironmentObservation].
-
-        Args:
-            payload: JSON response data from server
-
-        Returns:
-            StepResult with WildfireenvironmentObservation
-        """
+    def _parse_result(self, payload: Dict) -> StepResult[WildfireObservation]:
         obs_data = payload.get("observation", {})
-        observation = WildfireenvironmentObservation(
-            echoed_message=obs_data.get("echoed_message", ""),
-            message_length=obs_data.get("message_length", 0),
+        
+        # Build strict dict wrapper
+        observation = WildfireObservation(
+            grid=obs_data.get("grid", []),
+            wind=obs_data.get("wind", {}),
+            crew_positions=obs_data.get("crew_positions", []),
+            division_zones=obs_data.get("division_zones", []),
+            assets_at_risk=obs_data.get("assets_at_risk", []),
+            timestep=obs_data.get("timestep", 0),
+            containment_pct=obs_data.get("containment_pct", 0),
+            metadata=obs_data.get("metadata", {}),
             done=payload.get("done", False),
             reward=payload.get("reward"),
-            metadata=obs_data.get("metadata", {}),
         )
 
         return StepResult(
@@ -84,15 +51,6 @@ class WildfireenvironmentEnv(
         )
 
     def _parse_state(self, payload: Dict) -> State:
-        """
-        Parse server response into State object.
-
-        Args:
-            payload: JSON response from state request
-
-        Returns:
-            State object with episode_id and step_count
-        """
         return State(
             episode_id=payload.get("episode_id"),
             step_count=payload.get("step_count", 0),

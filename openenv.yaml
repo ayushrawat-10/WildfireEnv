@@ -5,3 +5,168 @@ runtime: fastapi
 app: server.app:app
 port: 8000
 
+metadata:
+  name: "Wildfire Incident Command"
+  description: >
+    Real-world wildfire ICS simulation with hierarchical multi-agent coordination.
+    Agents control Division Supervisors and Crew Bosses on a 20x20 dynamic fire grid
+    where fire spreads based on wind direction and terrain.
+  version: "1.0.0"
+  author: "Meta Hackathon 2026"
+  license: "BSD-3-Clause"
+  tags:
+    - wildfire
+    - ICS
+    - multi-agent
+    - hierarchical-rl
+    - openenv
+  inference_script: "inference.py"
+
+environment:
+  type: "discrete"
+  grid_size: 20
+  divisions: 4
+  crews_per_division: 2
+
+  cell_states:
+    0: "Clear"
+    1: "Burning"
+    2: "Burnt"
+    3: "Firebreak"
+
+  observation_space:
+    type: "dict"
+    fields:
+      grid:
+        type: "List[List[int]]"
+        description: "20x20 fire state matrix"
+      division_zones:
+        type: "List[Zone]"
+        description: "Zone ID, label, and cell ranges for each division A-D"
+      crew_positions:
+        type: "List[Crew]"
+        description: "Each crew: id, division, current cell, status"
+      wind:
+        type: "WindVector"
+        description: "Direction (N/S/E/W) and speed (0.0-1.0)"
+      assets_at_risk:
+        type: "List[Asset]"
+        description: "Named assets with id, name, cell, and status (safe/burned)"
+      timestep:
+        type: "int"
+        description: "Current step number in the episode"
+      containment_pct:
+        type: "float"
+        description: "Overall fire containment percentage (0.0-1.0)"
+
+  action_space:
+    type: "dict"
+    fields:
+      division_id:
+        type: "int"
+        range: "0-3"
+        description: "Division to command: 0=A, 1=B, 2=C, 3=D"
+      crew_id:
+        type: "int"
+        range: "0-1"
+        description: "Crew boss index within the division"
+      action_type:
+        type: "enum"
+        values: ["SUPPRESS", "FIREBREAK", "MOVE", "HOLD"]
+        description: "Action to perform"
+      target_cell:
+        type: "List[int]"
+        description: "Target grid coordinates [row, col] (0-19)"
+
+  reward:
+    formula: >
+      reward = (0.4 * containment_delta)
+             + (0.3 * asset_safety_ratio)
+             + (0.2 * crew_efficiency)
+             - (0.1 * idle_penalty)
+             - (0.5 * assets_destroyed)
+             - (0.8 * front_merge)
+    components:
+      containment_delta:
+        weight: 0.4
+        type: "positive"
+        trigger: "Every step fire containment % increases"
+      asset_safety_ratio:
+        weight: 0.3
+        type: "positive"
+        trigger: "Every step based on how many assets remain safe"
+      crew_efficiency:
+        weight: 0.2
+        type: "positive"
+        trigger: "When a crew action directly reduces burning cells"
+      idle_penalty:
+        weight: -0.1
+        type: "negative"
+        trigger: "When HOLD action is used near active fire"
+      asset_destroyed:
+        weight: -0.5
+        type: "negative"
+        trigger: "Hard penalty each time an asset is burned"
+      front_merge_penalty:
+        weight: -0.8
+        type: "negative"
+        trigger: "Task 3 only — when two fire fronts merge"
+
+endpoints:
+  reset: "/reset"
+  step: "/step"
+  state: "/state"
+  tasks: "/tasks"
+  grader: "/grader"
+  baseline: "/baseline"
+
+tasks:
+  - id: task_1
+    name: "Single Front Containment"
+    difficulty: easy
+    max_steps: 30
+    description: >
+      Fire starts as a 5x5 cluster in Division A.
+      Contain all fire within Division A within 30 steps.
+      No fire must cross into Divisions B, C, or D.
+    initial_fire: "5x5 cluster in center of Division A"
+    wind: "Fixed East, speed 0.3"
+    assets: []
+    score_formula: "(cells_contained_in_A / total_burning_cells) * containment_speed_bonus"
+    score_range: [0.0, 1.0]
+    grader: "TaskGrader.grade_task_1()"
+
+  - id: task_2
+    name: "Asset Protection"
+    difficulty: medium
+    max_steps: 50
+    description: >
+      Fire starts on the north edge and spreads toward 3 named assets.
+      Suppress the fire AND keep Town, Water Tower, and Road Junction safe.
+    initial_fire: "10 cells burning on north edge of map"
+    wind: "Fixed South, speed 0.5"
+    assets:
+      - name: "Town"
+        cell: [15, 10]
+      - name: "Water Tower"
+        cell: [12, 5]
+      - name: "Road Junction"
+        cell: [14, 15]
+    score_formula: "containment_ratio * (assets_saved / 3)"
+    score_range: [0.0, 1.0]
+    grader: "TaskGrader.grade_task_2()"
+
+  - id: task_3
+    name: "Multi-Front Outbreak"
+    difficulty: hard
+    max_steps: 60
+    description: >
+      Fire ignites simultaneously in Divisions A, B, and C.
+      Coordinate all Division Supervisors and Crew Bosses across the entire map.
+      Prevent fronts from merging. Protect 6 assets (2 per division).
+    initial_fire: "5 cells burning in Division A, B, and C simultaneously"
+    wind: "Seeded deterministic (seed=42): direction=S, speed=0.57"
+    assets: "2 assets per active division (6 total)"
+    score_formula: "avg_containment * speed_factor * asset_factor - merge_penalty"
+    score_range: [0.0, 1.0]
+    grader: "TaskGrader.grade_task_3()"
