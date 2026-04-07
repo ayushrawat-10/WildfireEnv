@@ -34,7 +34,7 @@ class TaskGrader:
         Task 1 (Easy): Contain fire within Division A.
         Score = (cells_in_A_contained / total_affected) * speed_bonus
         """
-        state = self.env.state()
+        state = self.env.get_internal_state()
         grid = state["grid"]
         zone = DIVISIONS["A"]
 
@@ -68,7 +68,7 @@ class TaskGrader:
         Task 2 (Medium): Contain fire AND protect 3 assets.
         Score = containment_ratio * (assets_saved / 3)
         """
-        state = self.env.state()
+        state = self.env.get_internal_state()
         grid = state["grid"]
 
         total_cells = 20 * 20
@@ -89,7 +89,7 @@ class TaskGrader:
         Task 3 (Hard): Contain all 3 fire fronts, protect 6 assets, no merges.
         Score = weighted_containment * speed_factor * asset_factor
         """
-        state = self.env.state()
+        state = self.env.get_internal_state()
         grid = state["grid"]
         timestep = state["timestep"]
         front_merges = state.get("front_merges", 0)

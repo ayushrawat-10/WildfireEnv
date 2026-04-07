@@ -6,6 +6,6 @@
 
 """Wildfireenvironment environment server components."""
 
-from .wildfireEnvironment_environment import WildfireenvironmentEnvironment
+from .wildfireEnvironment_environment import WildfireEnv
 
-__all__ = ["WildfireenvironmentEnvironment"]
+__all__ = ["WildfireEnv"]

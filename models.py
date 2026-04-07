@@ -49,3 +49,19 @@ class BaselineResponse(BaseModel):
     task_scores: Dict[str, float]
     total_reward: float
     steps_taken: int
+
+class ResetRequest(BaseModel):
+    task: int = 1
+
+class StepResponse(BaseModel):
+    observation: Dict[str, Any]
+    reward: float
+    done: bool
+    info: Dict[str, Any]
+
+class ResetResponse(BaseModel):
+    observation: Dict[str, Any]
+    info: Dict[str, Any] = {}
+
+class StateResponse(BaseModel):
+    state: Dict[str, Any]

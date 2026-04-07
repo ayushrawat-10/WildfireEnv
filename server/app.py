@@ -21,12 +21,12 @@ except Exception as e:  # pragma: no cover
     ) from e
 
 try:
-    from ..models import WildfireAction, WildfireObservation, TaskResponse, GraderResponse, BaselineResponse
+    from ..models import WildfireAction, WildfireObservation, TaskResponse, GraderResponse, BaselineResponse, ResetRequest, StepResponse, ResetResponse, StateResponse
     from .wildfireEnvironment_environment import WildfireEnv
     from .tasks import TASKS, TaskGrader
     from .agent import BaselineAgent
-except ModuleNotFoundError:
-    from models import WildfireAction, WildfireObservation, TaskResponse, GraderResponse, BaselineResponse
+except (ModuleNotFoundError, ImportError):
+    from models import WildfireAction, WildfireObservation, TaskResponse, GraderResponse, BaselineResponse, ResetRequest, StepResponse, ResetResponse, StateResponse
     from server.wildfireEnvironment_environment import WildfireEnv
     from server.tasks import TASKS, TaskGrader
     from server.agent import BaselineAgent
@@ -40,6 +40,50 @@ app = create_app(
     env_name="wildfireEnvironment",
     max_concurrent_envs=1,  # increase this number to allow more concurrent WebSocket sessions
 )
+
+# -----------------------------------------------------------------------------
+# Overriding OpenEnv Default Routes to maintain Frontend Compatibility
+# -----------------------------------------------------------------------------
+
+# Remove the automatically generated /step, /reset, /state endpoints
+# which expect the generic OpenEnv envelope, since the frontend expects the bare endpoints.
+app.router.routes = [
+    r for r in app.router.routes 
+    if getattr(r, "path", None) not in ["/reset", "/step", "/state"]
+]
+
+GLOBAL_ENV = WildfireEnv()
+
+def get_active_env():
+    """Helper to try to find the currently active OpenEnv session instance."""
+    if hasattr(app.state, "env_manager"):
+        # Access the private dict of sessions to get the running environment
+        envs = getattr(app.state.env_manager, "_envs", {})
+        if envs:
+            return list(envs.values())[-1]
+    return GLOBAL_ENV
+
+@app.api_route("/reset", methods=["GET", "POST"], response_model=ResetResponse)
+def reset_env(body: ResetRequest = None):
+    active_env = get_active_env()
+    task = (body.task if body else None) or 1
+    obs = active_env.reset(task=task)
+    obs_dict = obs.model_dump() if hasattr(obs, "model_dump") else obs.dict()
+    return {"observation": obs_dict, "info": {"task": task}}
+
+@app.post("/step", response_model=StepResponse)
+def step_env(action: WildfireAction):
+    active_env = get_active_env()
+    obs = active_env.step(action)
+    obs_dict = obs.model_dump() if hasattr(obs, "model_dump") else obs.dict()
+    info = obs_dict.get("metadata", {})
+    return {"observation": obs_dict, "reward": obs.reward, "done": obs.done, "info": info}
+
+@app.get("/state", response_model=StateResponse)
+def get_state():
+    active_env = get_active_env()
+    return {"state": active_env.get_internal_state()}
+
 
 # -----------------------------------------------------------------------------
 # Additional Wildfire Routes & Integrations
@@ -63,15 +107,6 @@ def list_tasks():
         {"name": t.name, "difficulty": t.difficulty, "description": t.description}
         for t in TASKS
     ]
-
-def get_active_env():
-    """Helper to try to find the currently active OpenEnv session instance."""
-    if hasattr(app.state, "env_manager"):
-        # Access the private dict of sessions to get the running environment
-        envs = getattr(app.state.env_manager, "_envs", {})
-        if envs:
-            return list(envs.values())[-1]
-    return WildfireEnv()
 
 @app.get("/grader", response_model=GraderResponse)
 def get_grader_scores():
@@ -111,7 +146,7 @@ def run_baseline():
         
         try:
             from ..models import WildfireAction
-        except ModuleNotFoundError:
+        except (ModuleNotFoundError, ImportError):
             from models import WildfireAction
             
         action_obj = WildfireAction(**action_dict)
