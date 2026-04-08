@@ -1,17 +1,14 @@
-```py
-# unchanges for now
-```
 ---
-title: Wildfireenvironment Environment Server
-emoji: 🌟
+title: OpenEnv Hackathon
+emoji: 🐠
 colorFrom: green
-colorTo: indigo
-sdk: docker
+colorTo: green
+sdk: gradio
+sdk_version: 6.11.0
+app_file: app.py
 pinned: false
-app_port: 8000
-base_path: /web
-tags:
-  - openenv
+license: mit
+short_description: Wildfire simulation environment using OpenEnv to train model
 ---
 
 # Wildfireenvironment Environment
