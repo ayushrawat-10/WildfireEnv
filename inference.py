@@ -220,6 +220,72 @@ async def main() -> None:
     finally:
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
+async def run_inference(task: int = 1) -> dict:
+    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+
+    rewards: List[float] = []
+    steps_taken = 0
+    score = 0.0
+    success = False
+
+    task_name = {1: "single_front_containment", 2: "asset_protection", 3: "multi_front_outbreak"}.get(task, f"task_{task}")
+
+    try:
+        if IMAGE_NAME:
+            env = await WildfireClient.from_docker_image(IMAGE_NAME)
+            eval_base_url = getattr(env, "_base_url", "http://localhost:8000")
+        else:
+            eval_base_url = "http://localhost:8000"
+            env = WildfireClient(base_url=eval_base_url)
+
+        async with env:
+            import httpx
+            async with httpx.AsyncClient() as http:
+                await http.post(f"{eval_base_url}/reset", json={"task": task})
+
+            result = await env.reset()
+            obs_obj = result.observation
+            obs_dict = obs_obj.model_dump() if hasattr(obs_obj, "model_dump") else obs_obj.dict()
+
+            for step in range(1, MAX_STEPS + 1):
+                if result.done:
+                    break
+
+                action_dict = get_action_from_llm(client, obs_dict)
+                result = await env.step(WildfireAction(**action_dict))
+
+                obs_obj = result.observation
+                obs_dict = obs_obj.model_dump() if hasattr(obs_obj, "model_dump") else obs_obj.dict()
+
+                reward = result.reward or 0.0
+                done = result.done
+
+                rewards.append(reward)
+                steps_taken = step
+
+                if done:
+                    break
+
+            async with httpx.AsyncClient() as http:
+                resp = await http.get(f"{eval_base_url}/grader")
+                if resp.status_code == 200:
+                    scores = resp.json().get("task_scores", {})
+                    score = scores.get(f"task_{task}", 0.0)
+                else:
+                    score = sum(rewards) / MAX_STEPS
+
+            success = score >= SUCCESS_SCORE_THRESHOLD
+
+    except Exception as e:
+        return {"error": str(e)}
+
+    return {
+        "success": success,
+        "steps": steps_taken,
+        "score": score,
+        "rewards": rewards,
+        "task": task_name
+    }
 
 if __name__ == "__main__":
     asyncio.run(main())
