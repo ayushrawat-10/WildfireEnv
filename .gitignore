@@ -3,6 +3,7 @@
 .venv/
 venv/
 env/
+OpenEnv_Hackathon/
 
 # Python Cache
 __pycache__/
