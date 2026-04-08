@@ -134,7 +134,7 @@ tasks:
     assets: []
     score_formula: "(cells_contained_in_A / total_burning_cells) * containment_speed_bonus"
     score_range: [0.0, 1.0]
-    grader: "TaskGrader.grade_task_1()"
+    grader: "TaskGrader.grade_task_1"
 
   - id: task_2
     name: "Asset Protection"
@@ -154,7 +154,7 @@ tasks:
         cell: [14, 15]
     score_formula: "containment_ratio * (assets_saved / 3)"
     score_range: [0.0, 1.0]
-    grader: "TaskGrader.grade_task_2()"
+    grader: "TaskGrader.grade_task_2"
 
   - id: task_3
     name: "Multi-Front Outbreak"
@@ -169,4 +169,4 @@ tasks:
     assets: "2 assets per active division (6 total)"
     score_formula: "avg_containment * speed_factor * asset_factor - merge_penalty"
     score_range: [0.0, 1.0]
-    grader: "TaskGrader.grade_task_3()"
+    grader: "TaskGrader.grade_task_3"

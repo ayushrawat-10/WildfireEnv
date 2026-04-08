@@ -220,7 +220,7 @@ async def main() -> None:
     finally:
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
-async def run_inference(task: int = 1) -> dict:
+async def run_inference(task: int) -> dict:
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
     rewards: List[float] = []
@@ -288,4 +288,22 @@ async def run_inference(task: int = 1) -> dict:
     }
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Run LLM inference on Wildfire ICS OpenEnv")
+    parser.add_argument(
+        "--task",
+        type=int,
+        default=None,
+        choices=[1, 2, 3],
+        help="Task number (1=easy, 2=medium, 3=hard). Omit to run all 3.",
+    )
+    args = parser.parse_args()
+
+    tasks_to_run = [args.task] if args.task is not None else [1, 2, 3]
+    all_scores = {}
+
+    for t in tasks_to_run:
+        scores = asyncio.run(run_inference(task=t))
+        all_scores[f"task_{t}"] = scores["score"] if isinstance(scores, dict) and "score" in scores else 0.0
+
+    print(f"[SCORES] {json.dumps(all_scores)}", flush=True)
+    sys.exit(0)
