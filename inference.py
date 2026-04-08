@@ -1,5 +1,5 @@
 """
-Inference Script (Wildfire Environment)
+Inference Script Example (Wildfire ICS Agent)
 ===================================
 Uses HuggingFace Inference Router (OpenAI-compatible API) to drive
 the language model through wildfire suppression tasks, matching the
@@ -91,23 +91,17 @@ def get_action_from_llm(client: OpenAI, obs: Dict[str, Any]) -> Dict[str, Any]:
 Current timestep: {obs.get('timestep', 0)}
 Containment: {pct:.1f}%
 Wind: {wind['direction']} at speed {wind['speed']}
-
 Division fire summary (burning cell counts):
 {json.dumps(division_summary, indent=2)}
-
 Assets at risk:
 {json.dumps([{a['name']: a['status']} for a in assets], indent=2)}
-
 Choose ONE action to direct a crew boss. Respond ONLY with a JSON object.
-
 JSON Keys:
 - "division_id": integer 0-3 (0=A, 1=B, 2=C, 3=D)
 - "crew_id": integer 0 or 1 (two crews per division)
 - "action_type": "SUPPRESS", "FIREBREAK", "MOVE", or "HOLD"
 - "target_cell": [row, col] (integers 0-19)
-
 Busiest division is {busiest_label} (id={busiest_div_id}) — suggested target: {target_cell}
-
 Reply with ONLY the JSON object:"""
 
     try:
@@ -220,7 +214,7 @@ async def main() -> None:
     finally:
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
-async def run_inference(task: int) -> dict:
+async def run_inference(task: int = 1) -> dict:
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
     rewards: List[float] = []
@@ -228,7 +222,14 @@ async def run_inference(task: int) -> dict:
     score = 0.0
     success = False
 
-    task_name = {1: "single_front_containment", 2: "asset_protection", 3: "multi_front_outbreak"}.get(task, f"task_{task}")
+    task_name = {
+        1: "single_front_containment",
+        2: "asset_protection",
+        3: "multi_front_outbreak"
+    }.get(task, f"task_{task}")
+
+    # ✅ START LOG
+    log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME)
 
     try:
         if IMAGE_NAME:
@@ -252,6 +253,10 @@ async def run_inference(task: int) -> dict:
                     break
 
                 action_dict = get_action_from_llm(client, obs_dict)
+
+                # For logging (string format)
+                action_str = json.dumps(action_dict, separators=(",", ":"))
+
                 result = await env.step(WildfireAction(**action_dict))
 
                 obs_obj = result.observation
@@ -259,9 +264,19 @@ async def run_inference(task: int) -> dict:
 
                 reward = result.reward or 0.0
                 done = result.done
+                error = None
 
                 rewards.append(reward)
                 steps_taken = step
+
+                # ✅ STEP LOG
+                log_step(
+                    step=step,
+                    action=action_str,
+                    reward=reward,
+                    done=done,
+                    error=error
+                )
 
                 if done:
                     break
@@ -277,7 +292,17 @@ async def run_inference(task: int) -> dict:
             success = score >= SUCCESS_SCORE_THRESHOLD
 
     except Exception as e:
-        return {"error": str(e)}
+        print(f"[ERROR] {e}", flush=True)
+        success = False
+
+    finally:
+        # ✅ END LOG (ALWAYS runs)
+        log_end(
+            success=success,
+            steps=steps_taken,
+            score=score,
+            rewards=rewards
+        )
 
     return {
         "success": success,
@@ -298,12 +323,15 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    tasks_to_run = [args.task] if args.task is not None else [1, 2, 3]
+    tasks_to_run = [args.task] if args.task else [1, 2, 3]
     all_scores = {}
 
     for t in tasks_to_run:
-        scores = asyncio.run(run_inference(task=t))
-        all_scores[f"task_{t}"] = scores["score"] if isinstance(scores, dict) and "score" in scores else 0.0
+        result = asyncio.run(run_inference(task=t))
+
+        if isinstance(result, dict) and "score" in result:
+            all_scores[f"task_{t}"] = result["score"]
+        else:
+            all_scores[f"task_{t}"] = 0.0
 
     print(f"[SCORES] {json.dumps(all_scores)}", flush=True)
-    sys.exit(0)
