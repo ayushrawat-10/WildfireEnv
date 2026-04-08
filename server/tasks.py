@@ -12,11 +12,13 @@ DIVISIONS = {
 
 
 class Task:
-    def __init__(self, name: str, difficulty: str, description: str, max_steps: int):
+    def __init__(self, id: str, name: str, difficulty: str, description: str, max_steps: int, grader: str):
+        self.id = id
         self.name = name
         self.difficulty = difficulty
         self.description = description
         self.max_steps = max_steps
+        self.grader = grader
 
 
 class TaskGrader:
@@ -34,7 +36,7 @@ class TaskGrader:
         Task 1 (Easy): Contain fire within Division A.
         Score = (cells_in_A_contained / total_affected) * speed_bonus
         """
-        state = self.env.state()
+        state = self.env.get_internal_state()
         grid = state["grid"]
         zone = DIVISIONS["A"]
 
@@ -125,21 +127,27 @@ class TaskGrader:
 
 TASKS = [
     Task(
-        "Task 1 — Single Front Containment",
+        "task_1",
+        "Single Front Containment",
         "Easy",
         "Fire starts in Division A. Contain all fire within Division A within 30 steps.",
         30,
+        "TaskGrader.grade_task_1()",
     ),
     Task(
-        "Task 2 — Asset Protection",
+        "task_2",
+        "Asset Protection",
         "Medium",
         "Fire starts on north edge. Suppress fire AND keep Town, Water Tower, and Road Junction safe within 50 steps.",
         50,
+        "TaskGrader.grade_task_2()",
     ),
     Task(
-        "Task 3 — Multi-Front Outbreak",
+        "task_3",
+        "Multi-Front Outbreak",
         "Hard",
         "Fire ignites in 3 divisions simultaneously. Coordinate all crews to contain all fronts within 75 steps.",
         75,
+        "TaskGrader.grade_task_3()",
     ),
 ]

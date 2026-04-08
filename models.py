@@ -38,9 +38,11 @@ class WildfireObservation(Observation):
 from pydantic import BaseModel
 
 class TaskResponse(BaseModel):
+    id: str
     name: str
     difficulty: str
     description: str
+    grader: str
 
 class GraderResponse(BaseModel):
     task_scores: Dict[str, float]

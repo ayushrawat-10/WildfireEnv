@@ -104,7 +104,13 @@ def serve_frontend():
 @app.get("/tasks", response_model=List[TaskResponse])
 def list_tasks():
     return [
-        {"name": t.name, "difficulty": t.difficulty, "description": t.description}
+        {
+            "id": t.id,
+            "name": t.name,
+            "difficulty": t.difficulty,
+            "description": t.description,
+            "grader": t.grader
+        }
         for t in TASKS
     ]
 
