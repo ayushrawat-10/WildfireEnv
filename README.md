@@ -17,7 +17,7 @@ A simple test environment that echoes back messages. Perfect for testing the env
 
 ## Quick Start
 
-The simplest way to use the Wildfireenvironment environment is through the `WildfireenvironmentEnv` class:
+The simplest way to use the WildfireEnvironment environment is through the `WildfireenvironmentEnv` class:
 
 ```python
 from wildfireEnvironment import WildfireenvironmentAction, WildfireenvironmentEnv
