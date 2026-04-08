@@ -22,19 +22,19 @@ except Exception as e:  # pragma: no cover
 
 try:
     from ..models import WildfireAction, WildfireObservation, TaskResponse, GraderResponse, BaselineResponse, ResetRequest, StepResponse, ResetResponse, StateResponse
-    from .wildfireEnvironment_environment import WildfireEnv
+    from .Wildfire_env import Wildfire_env
     from .tasks import TASKS, TaskGrader
     from .agent import BaselineAgent
 except (ModuleNotFoundError, ImportError):
     from models import WildfireAction, WildfireObservation, TaskResponse, GraderResponse, BaselineResponse, ResetRequest, StepResponse, ResetResponse, StateResponse
-    from server.wildfireEnvironment_environment import WildfireEnv
+    from server.Wildfire_env import Wildfire_env
     from server.tasks import TASKS, TaskGrader
     from server.agent import BaselineAgent
 
 
 # Create the app with web interface and README integration
 app = create_app(
-    WildfireEnv,
+    Wildfire_env,
     WildfireAction,
     WildfireObservation,
     env_name="wildfireEnvironment",
@@ -52,7 +52,7 @@ app.router.routes = [
     if getattr(r, "path", None) not in ["/reset", "/step", "/state"]
 ]
 
-GLOBAL_ENV = WildfireEnv()
+GLOBAL_ENV = Wildfire_env()
 
 def get_active_env():
     """Helper to try to find the currently active OpenEnv session instance."""
@@ -129,7 +129,7 @@ def get_grader_scores():
 @app.get("/baseline", response_model=BaselineResponse)
 def run_baseline():
     """Run the rule-based baseline agent on a fresh local env instance."""
-    fresh_env = WildfireEnv()
+    fresh_env = Wildfire_env()
     
     current_task = 1
     try:

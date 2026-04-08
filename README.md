@@ -17,7 +17,7 @@ A simple test environment that echoes back messages. Perfect for testing the env
 
 ## Quick Start
 
-The simplest way to use the WildfireEnvironment environment is through the `WildfireenvironmentEnv` class:
+The simplest way to use the Wildfire_environment environment is through the `WildfireenvironmentEnv` class:
 
 ```python
 from wildfireEnvironment import WildfireenvironmentAction, WildfireenvironmentEnv
@@ -218,7 +218,7 @@ Test the environment logic directly without starting the HTTP server:
 
 ```bash
 # From the server directory
-python3 server/wildfireEnvironment_environment.py
+python3 server/Wildfire_env.py
 ```
 
 This verifies that:
@@ -249,7 +249,7 @@ wildfireEnvironment/
 ├── models.py              # Action and Observation models
 └── server/
     ├── __init__.py        # Server module exports
-    ├── wildfireEnvironment_environment.py  # Core environment logic
+    ├── Wildfire_env.py  # Core environment logic
     ├── app.py             # FastAPI application (HTTP + WebSocket endpoints)
     └── Dockerfile         # Container image definition
 ```

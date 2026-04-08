@@ -3,14 +3,14 @@ test_env.py — Smoke tests for the Wildfire ICS OpenEnv environment.
 Run with: python test_env.py
 """
 
-from server.wildfireEnvironment_environment import WildfireEnv
+from server.Wildfire_env import Wildfire_env
 from server.tasks import TaskGrader, TASKS
 from server.agent import BaselineAgent
 from models import WildfireAction
 
 
 def test_reset_all_tasks():
-    env = WildfireEnv()
+    env = Wildfire_env()
     for task in [1, 2, 3]:
         obs_obj = env.reset(task=task)
         obs = obs_obj.model_dump() if hasattr(obs_obj, "model_dump") else obs_obj.dict()
@@ -26,7 +26,7 @@ def test_reset_all_tasks():
 
 
 def test_step_returns_correct_shape():
-    env = WildfireEnv()
+    env = Wildfire_env()
     env.reset(task=1)
     action_dict = {
         "division_id": 0,
@@ -43,7 +43,7 @@ def test_step_returns_correct_shape():
 
 
 def test_all_action_types():
-    env = WildfireEnv()
+    env = Wildfire_env()
     env.reset(task=1)
     actions = [
         {"division_id": 0, "crew_id": 0, "action_type": "SUPPRESS",  "target_cell": [3, 3]},
@@ -58,7 +58,7 @@ def test_all_action_types():
 
 
 def test_grader_all_tasks():
-    env = WildfireEnv()
+    env = Wildfire_env()
     for task in [1, 2, 3]:
         env.reset(task=task)
         grader = TaskGrader(env)
@@ -72,7 +72,7 @@ def test_grader_all_tasks():
 
 
 def test_baseline_agent():
-    env = WildfireEnv()
+    env = Wildfire_env()
     for task in [1, 2, 3]:
         env.reset(task=task)
         agent = BaselineAgent(env)
@@ -92,7 +92,7 @@ def test_baseline_agent():
 
 
 def test_state_method():
-    env = WildfireEnv()
+    env = Wildfire_env()
     env.reset(task=2)
     state = env.get_internal_state()
     required = ["grid", "crews", "wind", "timestep", "containment_pct", "assets", "task", "done"]

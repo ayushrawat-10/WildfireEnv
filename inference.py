@@ -1,5 +1,5 @@
 """
-Inference Script Example (Wildfire ICS Agent)
+Inference Script (Wildfire Environment)
 ===================================
 Uses HuggingFace Inference Router (OpenAI-compatible API) to drive
 the language model through wildfire suppression tasks, matching the
