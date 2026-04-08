@@ -34,7 +34,7 @@ class TaskGrader:
         Task 1 (Easy): Contain fire within Division A.
         Score = (cells_in_A_contained / total_affected) * speed_bonus
         """
-        state = self.env.get_internal_state()
+        state = self.env.state()
         grid = state["grid"]
         zone = DIVISIONS["A"]
 
