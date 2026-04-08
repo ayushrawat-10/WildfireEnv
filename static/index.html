@@ -1,678 +1,887 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>🔥 Wildfire ICS — OpenEnv</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: #0f0f0f;
-    color: #e8e8e8;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔥 Wildfire ICS — OpenEnv</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  /* ── Header ── */
-  header {
-    background: linear-gradient(135deg, #1a0a00, #3a1000);
-    border-bottom: 2px solid #ff4500;
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  header h1 { font-size: 1.3rem; font-weight: 700; color: #ff6a00; }
-  header span { font-size: 0.8rem; color: #999; margin-left: auto; }
-  .badge {
-    background: #ff4500;
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 99px;
-    letter-spacing: 0.05em;
-  }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f0f;
+      color: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-  /* ── Layout ── */
-  main {
-    display: grid;
-    grid-template-columns: 260px 1fr 280px;
-    gap: 0;
-    flex: 1;
-    height: calc(100vh - 57px);
-    overflow: hidden;
-  }
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a0a00, #3a1000);
+      border-bottom: 2px solid #ff4500;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-  /* ── Panels ── */
-  .panel {
-    padding: 16px;
-    overflow-y: auto;
-    border-right: 1px solid #222;
-  }
-  .panel:last-child { border-right: none; }
-  .panel h2 {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #888;
-    margin-bottom: 12px;
-  }
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ff6a00;
+    }
 
-  /* ── Controls ── */
-  .control-group { margin-bottom: 16px; }
-  label { font-size: 0.78rem; color: #aaa; display: block; margin-bottom: 4px; }
-  select, input {
-    width: 100%;
-    background: #1c1c1c;
-    border: 1px solid #333;
-    color: #e8e8e8;
-    padding: 7px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-  }
-  select:focus, input:focus { outline: none; border-color: #ff4500; }
+    header span {
+      font-size: 0.8rem;
+      color: #999;
+      margin-left: auto;
+    }
 
-  .btn {
-    width: 100%;
-    padding: 9px;
-    border-radius: 6px;
-    border: none;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 8px;
-    transition: opacity 0.15s;
-  }
-  .btn:hover { opacity: 0.85; }
-  .btn:active { opacity: 0.7; }
-  .btn-primary { background: #ff4500; color: #fff; }
-  .btn-secondary { background: #2a2a2a; color: #ccc; border: 1px solid #444; }
-  .btn-success { background: #1a5c2a; color: #7dff9a; border: 1px solid #2e8c45; }
-  .btn-danger  { background: #5c1a1a; color: #ff9a7d; border: 1px solid #8c2e2e; }
-  .btn-sm {
-    width: auto;
-    padding: 5px 12px;
-    font-size: 0.78rem;
-    margin-bottom: 0;
-  }
+    .badge {
+      background: #ff4500;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      letter-spacing: 0.05em;
+    }
 
-  /* ── Stats ── */
-  .stat-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid #1e1e1e;
-    font-size: 0.82rem;
-  }
-  .stat-row:last-child { border-bottom: none; }
-  .stat-label { color: #888; }
-  .stat-value { font-weight: 700; color: #ff9955; font-variant-numeric: tabular-nums; }
-  .stat-value.good { color: #7dff9a; }
-  .stat-value.bad  { color: #ff5555; }
+    /* ── Layout ── */
+    main {
+      display: grid;
+      grid-template-columns: 260px 1fr 280px;
+      gap: 0;
+      flex: 1;
+      height: calc(100vh - 57px);
+      overflow: hidden;
+    }
 
-  /* ── Grid ── */
-  .grid-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #111;
-    padding: 16px;
-    gap: 12px;
-  }
-  #fire-grid {
-    display: grid;
-    grid-template-columns: repeat(20, 1fr);
-    gap: 1px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-    overflow: hidden;
-    width: min(560px, calc(100vw - 600px));
-    height: min(560px, calc(100vw - 600px));
-  }
-  .cell {
-    aspect-ratio: 1;
-    transition: background 0.2s;
-    cursor: pointer;
-    position: relative;
-  }
-  .cell-0 { background: #1a2a1a; }
-  .cell-1 { background: #ff4500; }
-  .cell-1.anim { animation: flicker 0.5s infinite alternate; }
-  .cell-2 { background: #2a2a2a; }
-  .cell-3 { background: #6b4226; }
-  .cell-asset { outline: 2px solid #ffd700; outline-offset: -2px; }
-  .cell-crew  { outline: 2px solid #00cfff; outline-offset: -2px; }
-  @keyframes flicker {
-    from { background: #ff4500; }
-    to   { background: #ff8c00; }
-  }
+    /* ── Panels ── */
+    .panel {
+      padding: 16px;
+      overflow-y: auto;
+      border-right: 1px solid #222;
+    }
 
-  /* division boundary overlay */
-  .div-A-border-r { border-right: 2px solid rgba(255,255,255,0.25); }
-  .div-B-border-b { border-bottom: 2px solid rgba(255,255,255,0.25); }
+    .panel:last-child {
+      border-right: none;
+    }
 
-  /* Legend */
-  .legend {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    justify-content: center;
-    font-size: 0.73rem;
-    color: #888;
-  }
-  .legend-item { display: flex; align-items: center; gap: 5px; }
-  .legend-dot {
-    width: 12px; height: 12px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
+    .panel h2 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #888;
+      margin-bottom: 12px;
+    }
 
-  /* Division labels */
-  .div-labels {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: min(560px, calc(100vw - 600px));
-    font-size: 0.7rem;
-    color: #555;
-    text-align: center;
-    gap: 2px;
-  }
+    /* ── Controls ── */
+    .control-group {
+      margin-bottom: 16px;
+    }
 
-  /* ── Action builder ── */
-  .action-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-  .action-btn {
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #333;
-    background: #1e1e1e;
-    color: #ccc;
-    cursor: pointer;
-    font-size: 0.78rem;
-    font-weight: 600;
-    transition: all 0.15s;
-    text-align: center;
-  }
-  .action-btn:hover { border-color: #ff4500; color: #ff9955; }
-  .action-btn.selected { background: #3a1000; border-color: #ff4500; color: #ff6a00; }
+    label {
+      font-size: 0.78rem;
+      color: #aaa;
+      display: block;
+      margin-bottom: 4px;
+    }
 
-  /* ── Log ── */
-  #step-log {
-    background: #111;
-    border: 1px solid #222;
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 0.73rem;
-    font-family: monospace;
-    color: #888;
-    height: 140px;
-    overflow-y: auto;
-    margin-top: 12px;
-  }
-  #step-log .log-entry { margin-bottom: 3px; }
-  #step-log .log-entry.ok  { color: #7dff9a; }
-  #step-log .log-entry.err { color: #ff5555; }
-  #step-log .log-entry.info { color: #ffcc55; }
+    select,
+    input {
+      width: 100%;
+      background: #1c1c1c;
+      border: 1px solid #333;
+      color: #e8e8e8;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
 
-  /* ── Score badges ── */
-  .score-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 6px;
-    margin-bottom: 14px;
-  }
-  .score-card {
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
-    border-radius: 8px;
-    padding: 10px 6px;
-    text-align: center;
-  }
-  .score-card .sc-label { font-size: 0.65rem; color: #666; margin-bottom: 4px; }
-  .score-card .sc-value { font-size: 1.2rem; font-weight: 800; color: #ff9955; }
+    select:focus,
+    input:focus {
+      outline: none;
+      border-color: #ff4500;
+    }
 
-  /* ── Crew list ── */
-  .crew-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 0;
-    border-bottom: 1px solid #1a1a1a;
-    font-size: 0.78rem;
-  }
-  .crew-dot { width: 8px; height: 8px; border-radius: 50%; background: #00cfff; flex-shrink: 0; }
-  .crew-div { color: #888; margin-left: auto; font-size: 0.7rem; }
+    .btn {
+      width: 100%;
+      padding: 9px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: opacity 0.15s;
+    }
 
-  /* ── Assets ── */
-  .asset-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 0;
-    font-size: 0.78rem;
-    border-bottom: 1px solid #1a1a1a;
-  }
-  .asset-status { margin-left: auto; font-size: 0.7rem; font-weight: 700; }
-  .asset-status.safe   { color: #7dff9a; }
-  .asset-status.burned { color: #ff5555; }
+    .btn:hover {
+      opacity: 0.85;
+    }
 
-  /* ── Containment bar ── */
-  .bar-wrap {
-    background: #1a1a1a;
-    border-radius: 99px;
-    height: 8px;
-    overflow: hidden;
-    margin-top: 4px;
-    margin-bottom: 14px;
-  }
-  .bar-fill {
-    height: 100%;
-    border-radius: 99px;
-    background: linear-gradient(90deg, #ff4500, #ffcc00);
-    transition: width 0.4s ease;
-  }
+    .btn:active {
+      opacity: 0.7;
+    }
 
-  .section-divider {
-    border: none;
-    border-top: 1px solid #222;
-    margin: 12px 0;
-  }
-</style>
+    .btn-primary {
+      background: #ff4500;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #2a2a2a;
+      color: #ccc;
+      border: 1px solid #444;
+    }
+
+    .btn-success {
+      background: #1a5c2a;
+      color: #7dff9a;
+      border: 1px solid #2e8c45;
+    }
+
+    .btn-danger {
+      background: #5c1a1a;
+      color: #ff9a7d;
+      border: 1px solid #8c2e2e;
+    }
+
+    .btn-sm {
+      width: auto;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      margin-bottom: 0;
+    }
+
+    /* ── Stats ── */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #1e1e1e;
+      font-size: 0.82rem;
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      color: #888;
+    }
+
+    .stat-value {
+      font-weight: 700;
+      color: #ff9955;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-value.good {
+      color: #7dff9a;
+    }
+
+    .stat-value.bad {
+      color: #ff5555;
+    }
+
+    /* ── Grid ── */
+    .grid-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+      padding: 16px;
+      gap: 12px;
+    }
+
+    #fire-grid {
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 1px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      overflow: hidden;
+      width: min(560px, calc(100vw - 600px));
+      height: min(560px, calc(100vw - 600px));
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      transition: background 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .cell-0 {
+      background: #1a2a1a;
+    }
+
+    .cell-1 {
+      background: #ff4500;
+    }
+
+    .cell-1.anim {
+      animation: flicker 0.5s infinite alternate;
+    }
+
+    .cell-2 {
+      background: #2a2a2a;
+    }
+
+    .cell-3 {
+      background: #6b4226;
+    }
+
+    .cell-asset {
+      outline: 2px solid #ffd700;
+      outline-offset: -2px;
+    }
+
+    .cell-crew {
+      outline: 2px solid #00cfff;
+      outline-offset: -2px;
+    }
+
+    @keyframes flicker {
+      from {
+        background: #ff4500;
+      }
+
+      to {
+        background: #ff8c00;
+      }
+    }
+
+    /* division boundary overlay */
+    .div-A-border-r {
+      border-right: 2px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .div-B-border-b {
+      border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      font-size: 0.73rem;
+      color: #888;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Division labels */
+    .div-labels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: min(560px, calc(100vw - 600px));
+      font-size: 0.7rem;
+      color: #555;
+      text-align: center;
+      gap: 2px;
+    }
+
+    /* ── Action builder ── */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .action-btn {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #1e1e1e;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .action-btn:hover {
+      border-color: #ff4500;
+      color: #ff9955;
+    }
+
+    .action-btn.selected {
+      background: #3a1000;
+      border-color: #ff4500;
+      color: #ff6a00;
+    }
+
+    /* ── Log ── */
+    #step-log {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 0.73rem;
+      font-family: monospace;
+      color: #888;
+      height: 140px;
+      overflow-y: auto;
+      margin-top: 12px;
+    }
+
+    #step-log .log-entry {
+      margin-bottom: 3px;
+    }
+
+    #step-log .log-entry.ok {
+      color: #7dff9a;
+    }
+
+    #step-log .log-entry.err {
+      color: #ff5555;
+    }
+
+    #step-log .log-entry.info {
+      color: #ffcc55;
+    }
+
+    /* ── Score badges ── */
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .score-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+
+    .score-card .sc-label {
+      font-size: 0.65rem;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .score-card .sc-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #ff9955;
+    }
+
+    /* ── Crew list ── */
+    .crew-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 0.78rem;
+    }
+
+    .crew-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00cfff;
+      flex-shrink: 0;
+    }
+
+    .crew-div {
+      color: #888;
+      margin-left: auto;
+      font-size: 0.7rem;
+    }
+
+    /* ── Assets ── */
+    .asset-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 0;
+      font-size: 0.78rem;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .asset-status {
+      margin-left: auto;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .asset-status.safe {
+      color: #7dff9a;
+    }
+
+    .asset-status.burned {
+      color: #ff5555;
+    }
+
+    /* ── Containment bar ── */
+    .bar-wrap {
+      background: #1a1a1a;
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+      margin-top: 4px;
+      margin-bottom: 14px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #ff4500, #ffcc00);
+      transition: width 0.4s ease;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid #222;
+      margin: 12px 0;
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <span style="font-size:1.5rem">🔥</span>
-  <h1>Wildfire Incident Command</h1>
-  <span class="badge">OpenEnv</span>
-  <span>Meta Hackathon 2026</span>
-</header>
+  <header style="position: relative;">
+    <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">
+      Wildfire Incident Command
+    </h1>
+    <span style="float: right;">Meta Hackathon 2026</span>
+  </header>
 
-<main>
+  <main>
 
-  <!-- ── LEFT PANEL: Controls ── -->
-  <div class="panel">
-    <h2>Mission Control</h2>
+    <!-- ── LEFT PANEL: Controls ── -->
+    <div class="panel">
+      <h2>Mission Control</h2>
 
-    <div class="control-group">
-      <label>Task</label>
-      <select id="task-select">
-        <option value="1">Task 1 — Single Front [Easy]</option>
-        <option value="2">Task 2 — Asset Protection [Medium]</option>
-        <option value="3">Task 3 — Multi-Front [Hard]</option>
-      </select>
-    </div>
+      <div class="control-group">
+        <label>Task</label>
+        <select id="task-select">
+          <option value="1">Task 1 — Single Front [Easy]</option>
+          <option value="2">Task 2 — Asset Protection [Medium]</option>
+          <option value="3">Task 3 — Multi-Front [Hard]</option>
+        </select>
+      </div>
 
-    <button class="btn btn-primary" onclick="resetEnv()">🔄 Reset Environment</button>
-    <button class="btn btn-secondary" onclick="runBaseline()">🤖 Run Baseline Agent</button>
-    <button class="btn btn-secondary" onclick="fetchGrader()">📊 Get Scores</button>
+      <button class="btn btn-primary" onclick="resetEnv()">🔄 Reset Environment</button>
+      <button class="btn btn-secondary" onclick="runBaseline()">🤖 Run Baseline Agent</button>
+      <button class="btn btn-secondary" onclick="fetchGrader()">📊 Get Scores</button>
 
-    <hr class="section-divider">
-    <h2>Action Builder</h2>
+      <hr class="section-divider">
+      <h2>Action Builder</h2>
 
-    <div class="control-group">
-      <label>Division</label>
-      <select id="act-division">
-        <option value="0">Division A (top-left)</option>
-        <option value="1">Division B (top-right)</option>
-        <option value="2">Division C (bottom-left)</option>
-        <option value="3">Division D (bottom-right)</option>
-      </select>
-    </div>
+      <div class="control-group">
+        <label>Division</label>
+        <select id="act-division">
+          <option value="0">Division A (top-left)</option>
+          <option value="1">Division B (top-right)</option>
+          <option value="2">Division C (bottom-left)</option>
+          <option value="3">Division D (bottom-right)</option>
+        </select>
+      </div>
 
-    <div class="control-group">
-      <label>Crew Boss</label>
-      <select id="act-crew">
-        <option value="0">Crew 0</option>
-        <option value="1">Crew 1</option>
-      </select>
-    </div>
+      <div class="control-group">
+        <label>Crew Boss</label>
+        <select id="act-crew">
+          <option value="0">Crew 0</option>
+          <option value="1">Crew 1</option>
+        </select>
+      </div>
 
-    <div class="control-group">
-      <label>Action Type</label>
-      <div class="action-grid">
-        <div class="action-btn selected" onclick="selectAction('SUPPRESS', this)">🔥 Suppress</div>
-        <div class="action-btn" onclick="selectAction('FIREBREAK', this)">🟫 Firebreak</div>
-        <div class="action-btn" onclick="selectAction('MOVE', this)">🚶 Move</div>
-        <div class="action-btn" onclick="selectAction('HOLD', this)">✋ Hold</div>
+      <div class="control-group">
+        <label>Action Type</label>
+        <div class="action-grid">
+          <div class="action-btn selected" onclick="selectAction('SUPPRESS', this)">🔥 Suppress</div>
+          <div class="action-btn" onclick="selectAction('FIREBREAK', this)">🟫 Firebreak</div>
+          <div class="action-btn" onclick="selectAction('MOVE', this)">🚶 Move</div>
+          <div class="action-btn" onclick="selectAction('HOLD', this)">✋ Hold</div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Target Cell (click grid or enter manually)</label>
+        <div style="display:flex;gap:6px">
+          <input type="number" id="act-row" placeholder="Row 0-19" min="0" max="19" value="3" />
+          <input type="number" id="act-col" placeholder="Col 0-19" min="0" max="19" value="3" />
+        </div>
+      </div>
+
+      <button class="btn btn-danger" onclick="sendStep()">⚡ Send Action</button>
+      <button class="btn btn-success" onclick="autoPlay()" id="auto-btn">▶ Auto-Play (Baseline)</button>
+
+      <div id="step-log">
+        <div class="log-entry info">Ready. Reset to start.</div>
       </div>
     </div>
 
-    <div class="control-group">
-      <label>Target Cell (click grid or enter manually)</label>
-      <div style="display:flex;gap:6px">
-        <input type="number" id="act-row" placeholder="Row 0-19" min="0" max="19" value="3" />
-        <input type="number" id="act-col" placeholder="Col 0-19" min="0" max="19" value="3" />
+    <!-- ── CENTER: Grid ── -->
+    <div class="grid-panel">
+      <div class="div-labels">
+        <div>Division A</div>
+        <div>Division B</div>
+        <div>Division C</div>
+        <div>Division D</div>
+      </div>
+      <div id="fire-grid"></div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#1a2a1a"></div>Clear
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#ff4500"></div>Burning
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#2a2a2a"></div>Burnt
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#6b4226"></div>Firebreak
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#1a2a1a;outline:2px solid #ffd700;outline-offset:-1px"></div>Asset
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#1a2a1a;outline:2px solid #00cfff;outline-offset:-1px"></div>Crew
+        </div>
       </div>
     </div>
 
-    <button class="btn btn-danger" onclick="sendStep()">⚡ Send Action</button>
-    <button class="btn btn-success" onclick="autoPlay()" id="auto-btn">▶ Auto-Play (Baseline)</button>
+    <!-- ── RIGHT PANEL: State ── -->
+    <div class="panel">
+      <h2>Episode State</h2>
 
-    <div id="step-log"><div class="log-entry info">Ready. Reset to start.</div></div>
-  </div>
+      <div class="stat-row">
+        <span class="stat-label">Timestep</span>
+        <span class="stat-value" id="s-timestep">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Containment</span>
+        <span class="stat-value" id="s-containment">—</span>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-fill" id="containment-bar" style="width:0%"></div>
+      </div>
 
-  <!-- ── CENTER: Grid ── -->
-  <div class="grid-panel">
-    <div class="div-labels">
-      <div>Division A</div><div>Division B</div>
-      <div>Division C</div><div>Division D</div>
+      <div class="stat-row">
+        <span class="stat-label">Wind</span>
+        <span class="stat-value" id="s-wind">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Last Reward</span>
+        <span class="stat-value" id="s-reward">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Episode Done</span>
+        <span class="stat-value" id="s-done">—</span>
+      </div>
+
+      <hr class="section-divider">
+      <h2>Task Scores</h2>
+      <div class="score-grid">
+        <div class="score-card">
+          <div class="sc-label">Task 1</div>
+          <div class="sc-value" id="sc-1">—</div>
+        </div>
+        <div class="score-card">
+          <div class="sc-label">Task 2</div>
+          <div class="sc-value" id="sc-2">—</div>
+        </div>
+        <div class="score-card">
+          <div class="sc-label">Task 3</div>
+          <div class="sc-value" id="sc-3">—</div>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+      <h2>Assets at Risk</h2>
+      <div id="asset-list">
+        <div style="color:#555;font-size:0.78rem">No assets in this task.</div>
+      </div>
+
+      <hr class="section-divider">
+      <h2>Crew Positions</h2>
+      <div id="crew-list"></div>
     </div>
-    <div id="fire-grid"></div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#1a2a1a"></div>Clear</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ff4500"></div>Burning</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#2a2a2a"></div>Burnt</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#6b4226"></div>Firebreak</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#1a2a1a;outline:2px solid #ffd700;outline-offset:-1px"></div>Asset</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#1a2a1a;outline:2px solid #00cfff;outline-offset:-1px"></div>Crew</div>
-    </div>
-  </div>
 
-  <!-- ── RIGHT PANEL: State ── -->
-  <div class="panel">
-    <h2>Episode State</h2>
+  </main>
 
-    <div class="stat-row">
-      <span class="stat-label">Timestep</span>
-      <span class="stat-value" id="s-timestep">—</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">Containment</span>
-      <span class="stat-value" id="s-containment">—</span>
-    </div>
-    <div class="bar-wrap"><div class="bar-fill" id="containment-bar" style="width:0%"></div></div>
+  <script>
+    const BASE = '';
+    let selectedAction = 'SUPPRESS';
+    let autoInterval = null;
+    let isPlaying = false;
+    let lastObs = null;
 
-    <div class="stat-row">
-      <span class="stat-label">Wind</span>
-      <span class="stat-value" id="s-wind">—</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">Last Reward</span>
-      <span class="stat-value" id="s-reward">—</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">Episode Done</span>
-      <span class="stat-value" id="s-done">—</span>
-    </div>
+    // ── Action selection ──
+    function selectAction(type, el) {
+      selectedAction = type;
+      document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+    }
 
-    <hr class="section-divider">
-    <h2>Task Scores</h2>
-    <div class="score-grid">
-      <div class="score-card"><div class="sc-label">Task 1</div><div class="sc-value" id="sc-1">—</div></div>
-      <div class="score-card"><div class="sc-label">Task 2</div><div class="sc-value" id="sc-2">—</div></div>
-      <div class="score-card"><div class="sc-label">Task 3</div><div class="sc-value" id="sc-3">—</div></div>
-    </div>
+    // ── Logging ──
+    function log(msg, type = 'ok') {
+      const log = document.getElementById('step-log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
 
-    <hr class="section-divider">
-    <h2>Assets at Risk</h2>
-    <div id="asset-list"><div style="color:#555;font-size:0.78rem">No assets in this task.</div></div>
-
-    <hr class="section-divider">
-    <h2>Crew Positions</h2>
-    <div id="crew-list"></div>
-  </div>
-
-</main>
-
-<script>
-const BASE = '';
-let selectedAction = 'SUPPRESS';
-let autoInterval = null;
-let isPlaying = false;
-let lastObs = null;
-
-// ── Action selection ──
-function selectAction(type, el) {
-  selectedAction = type;
-  document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-// ── Logging ──
-function log(msg, type = 'ok') {
-  const log = document.getElementById('step-log');
-  const entry = document.createElement('div');
-  entry.className = `log-entry ${type}`;
-  entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  log.appendChild(entry);
-  log.scrollTop = log.scrollHeight;
-}
-
-// ── Reset ──
-async function resetEnv() {
-  stopAuto();
-  const task = parseInt(document.getElementById('task-select').value);
-  try {
-    const res = await fetch(`${BASE}/reset`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task })
-    });
-    const data = await res.json();
-    lastObs = data.observation;
-    renderState(data.observation, null);
-    log(`Reset → Task ${task}`, 'info');
-    await fetchGrader();
-  } catch (e) {
-    log(`Reset failed: ${e.message}`, 'err');
-  }
-}
-
-// ── Step ──
-async function sendStep() {
-  const action = {
-    division_id: parseInt(document.getElementById('act-division').value),
-    crew_id: parseInt(document.getElementById('act-crew').value),
-    action_type: selectedAction,
-    target_cell: [
-      parseInt(document.getElementById('act-row').value),
-      parseInt(document.getElementById('act-col').value)
-    ]
-  };
-
-  try {
-    const res = await fetch(`${BASE}/step`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action)
-    });
-    const data = await res.json();
-    lastObs = data.observation;
-    renderState(data.observation, data.reward);
-    log(`Step t=${data.observation.timestep} | ${action.action_type} [${action.target_cell}] | reward=${data.reward.toFixed(4)} | done=${data.done}`, data.done ? 'info' : 'ok');
-    if (data.done) {
-      log('Episode complete!', 'info');
+    // ── Reset ──
+    async function resetEnv() {
       stopAuto();
-      await fetchGrader();
+      const task = parseInt(document.getElementById('task-select').value);
+      try {
+        const res = await fetch(`${BASE}/reset`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task })
+        });
+        const data = await res.json();
+        lastObs = data.observation;
+        renderState(data.observation, null);
+        log(`Reset → Task ${task}`, 'info');
+        await fetchGrader();
+      } catch (e) {
+        log(`Reset failed: ${e.message}`, 'err');
+      }
     }
-    if (data.info?.error) log(`⚠ ${data.info.error}`, 'err');
-  } catch (e) {
-    log(`Step failed: ${e.message}`, 'err');
-  }
-}
 
-// ── Baseline ──
-async function runBaseline() {
-  stopAuto();
-  log('Running baseline agent...', 'info');
-  try {
-    const res = await fetch(`${BASE}/baseline`);
-    const data = await res.json();
-    log(`Baseline done. Steps=${data.steps_taken} Reward=${data.total_reward.toFixed(4)}`, 'info');
-    updateScores(data.task_scores);
-    await refreshState();
-  } catch (e) {
-    log(`Baseline failed: ${e.message}`, 'err');
-  }
-}
+    // ── Step ──
+    async function sendStep() {
+      const action = {
+        division_id: parseInt(document.getElementById('act-division').value),
+        crew_id: parseInt(document.getElementById('act-crew').value),
+        action_type: selectedAction,
+        target_cell: [
+          parseInt(document.getElementById('act-row').value),
+          parseInt(document.getElementById('act-col').value)
+        ]
+      };
 
-// ── Grader ──
-async function fetchGrader() {
-  try {
-    const res = await fetch(`${BASE}/grader`);
-    const data = await res.json();
-    updateScores(data.task_scores);
-  } catch (e) {}
-}
-
-function updateScores(scores) {
-  document.getElementById('sc-1').textContent = scores.task_1?.toFixed(2) ?? '—';
-  document.getElementById('sc-2').textContent = scores.task_2?.toFixed(2) ?? '—';
-  document.getElementById('sc-3').textContent = scores.task_3?.toFixed(2) ?? '—';
-}
-
-// ── Auto-play ──
-async function autoPlay() {
-  if (isPlaying) { stopAuto(); return; }
-  isPlaying = true;
-  document.getElementById('auto-btn').textContent = '⏹ Stop Auto-Play';
-  autoInterval = setInterval(async () => {
-    if (!lastObs) { stopAuto(); return; }
-    const obs = lastObs;
-    const grid = obs.grid;
-
-    // Simple greedy: find busiest division, suppress nearest burning cell
-    let bestDiv = 0, bestCount = -1;
-    const divBounds = [
-      {rows:[0,9],cols:[0,9]}, {rows:[0,9],cols:[10,19]},
-      {rows:[10,19],cols:[0,9]}, {rows:[10,19],cols:[10,19]}
-    ];
-    divBounds.forEach((b, i) => {
-      let cnt = 0;
-      for (let r = b.rows[0]; r <= b.rows[1]; r++)
-        for (let c = b.cols[0]; c <= b.cols[1]; c++)
-          if (grid[r][c] === 1) cnt++;
-      if (cnt > bestCount) { bestCount = cnt; bestDiv = i; }
-    });
-
-    let targetCell = [5, 5];
-    const b = divBounds[bestDiv];
-    outer: for (let r = b.rows[0]; r <= b.rows[1]; r++)
-      for (let c = b.cols[0]; c <= b.cols[1]; c++)
-        if (grid[r][c] === 1) { targetCell = [r, c]; break outer; }
-
-    const action = {
-      division_id: bestDiv,
-      crew_id: obs.timestep % 2,
-      action_type: bestCount > 0 ? 'SUPPRESS' : 'HOLD',
-      target_cell: targetCell
-    };
-
-    try {
-      const res = await fetch(`${BASE}/step`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(action)
-      });
-      const data = await res.json();
-      lastObs = data.observation;
-      renderState(data.observation, data.reward);
-      if (data.done) { stopAuto(); log('Auto-play done.', 'info'); await fetchGrader(); }
-    } catch (e) { stopAuto(); }
-  }, 300);
-}
-
-function stopAuto() {
-  if (autoInterval) clearInterval(autoInterval);
-  autoInterval = null;
-  isPlaying = false;
-  document.getElementById('auto-btn').textContent = '▶ Auto-Play (Baseline)';
-}
-
-// ── Refresh state ──
-async function refreshState() {
-  try {
-    const res = await fetch(`${BASE}/state`);
-    const data = await res.json();
-    // Reconstruct a minimal obs from state
-    const s = data.state;
-    lastObs = { grid: s.grid, wind: s.wind, timestep: s.timestep, containment_pct: s.containment_pct, assets_at_risk: s.assets, crew_positions: s.crews, division_zones: [] };
-    renderState(lastObs, null);
-  } catch (e) {}
-}
-
-// ── Render ──
-function renderState(obs, reward) {
-  renderGrid(obs);
-  renderStats(obs, reward);
-  renderAssets(obs.assets_at_risk || []);
-  renderCrews(obs.crew_positions || []);
-}
-
-function renderGrid(obs) {
-  const grid = obs.grid;
-  const assets = obs.assets_at_risk || [];
-  const crews = obs.crew_positions || [];
-
-  const assetCells = new Set(assets.map(a => `${a.cell[0]},${a.cell[1]}`));
-  const crewCells = new Set(crews.map(c => `${c.cell[0]},${c.cell[1]}`));
-
-  const container = document.getElementById('fire-grid');
-  container.innerHTML = '';
-
-  for (let r = 0; r < 20; r++) {
-    for (let c = 0; c < 20; c++) {
-      const val = grid[r][c];
-      const cell = document.createElement('div');
-      cell.className = `cell cell-${val}`;
-      if (val === 1) cell.classList.add('anim');
-      if (assetCells.has(`${r},${c}`)) cell.classList.add('cell-asset');
-      if (crewCells.has(`${r},${c}`)) cell.classList.add('cell-crew');
-      cell.title = `(${r},${c}) = ${['Clear','Burning','Burnt','Firebreak'][val]}`;
-      cell.addEventListener('click', () => {
-        document.getElementById('act-row').value = r;
-        document.getElementById('act-col').value = c;
-      });
-      container.appendChild(cell);
+      try {
+        const res = await fetch(`${BASE}/step`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(action)
+        });
+        const data = await res.json();
+        lastObs = data.observation;
+        renderState(data.observation, data.reward);
+        log(`Step t=${data.observation.timestep} | ${action.action_type} [${action.target_cell}] | reward=${data.reward.toFixed(4)} | done=${data.done}`, data.done ? 'info' : 'ok');
+        if (data.done) {
+          log('Episode complete!', 'info');
+          stopAuto();
+          await fetchGrader();
+        }
+        if (data.info?.error) log(`⚠ ${data.info.error}`, 'err');
+      } catch (e) {
+        log(`Step failed: ${e.message}`, 'err');
+      }
     }
-  }
-}
 
-function renderStats(obs, reward) {
-  document.getElementById('s-timestep').textContent = obs.timestep ?? '—';
-  const pct = ((obs.containment_pct || 0) * 100).toFixed(1);
-  document.getElementById('s-containment').textContent = `${pct}%`;
-  document.getElementById('containment-bar').style.width = `${pct}%`;
-  document.getElementById('s-wind').textContent =
-    obs.wind ? `${obs.wind.direction} · ${obs.wind.speed}` : '—';
-  if (reward !== null) {
-    const rEl = document.getElementById('s-reward');
-    rEl.textContent = reward.toFixed(4);
-    rEl.className = 'stat-value ' + (reward >= 0 ? 'good' : 'bad');
-  }
-  document.getElementById('s-done').textContent = obs.done ? '✅ Yes' : '🔄 No';
-}
+    // ── Baseline ──
+    async function runBaseline() {
+      stopAuto();
+      log('Running baseline agent...', 'info');
+      try {
+        const res = await fetch(`${BASE}/baseline`);
+        const data = await res.json();
+        log(`Baseline done. Steps=${data.steps_taken} Reward=${data.total_reward.toFixed(4)}`, 'info');
+        updateScores(data.task_scores);
+        await refreshState();
+      } catch (e) {
+        log(`Baseline failed: ${e.message}`, 'err');
+      }
+    }
 
-function renderAssets(assets) {
-  const el = document.getElementById('asset-list');
-  if (!assets.length) {
-    el.innerHTML = '<div style="color:#555;font-size:0.78rem">No assets in this task.</div>';
-    return;
-  }
-  el.innerHTML = assets.map(a => `
+    // ── Grader ──
+    async function fetchGrader() {
+      try {
+        const res = await fetch(`${BASE}/grader`);
+        const data = await res.json();
+        updateScores(data.task_scores);
+      } catch (e) { }
+    }
+
+    function updateScores(scores) {
+      document.getElementById('sc-1').textContent = scores.task_1?.toFixed(2) ?? '—';
+      document.getElementById('sc-2').textContent = scores.task_2?.toFixed(2) ?? '—';
+      document.getElementById('sc-3').textContent = scores.task_3?.toFixed(2) ?? '—';
+    }
+
+    // ── Auto-play ──
+    async function autoPlay() {
+      if (isPlaying) { stopAuto(); return; }
+      isPlaying = true;
+      document.getElementById('auto-btn').textContent = '⏹ Stop Auto-Play';
+      autoInterval = setInterval(async () => {
+        if (!lastObs) { stopAuto(); return; }
+        const obs = lastObs;
+        const grid = obs.grid;
+
+        // Simple greedy: find busiest division, suppress nearest burning cell
+        let bestDiv = 0, bestCount = -1;
+        const divBounds = [
+          { rows: [0, 9], cols: [0, 9] }, { rows: [0, 9], cols: [10, 19] },
+          { rows: [10, 19], cols: [0, 9] }, { rows: [10, 19], cols: [10, 19] }
+        ];
+        divBounds.forEach((b, i) => {
+          let cnt = 0;
+          for (let r = b.rows[0]; r <= b.rows[1]; r++)
+            for (let c = b.cols[0]; c <= b.cols[1]; c++)
+              if (grid[r][c] === 1) cnt++;
+          if (cnt > bestCount) { bestCount = cnt; bestDiv = i; }
+        });
+
+        let targetCell = [5, 5];
+        const b = divBounds[bestDiv];
+        outer: for (let r = b.rows[0]; r <= b.rows[1]; r++)
+          for (let c = b.cols[0]; c <= b.cols[1]; c++)
+            if (grid[r][c] === 1) { targetCell = [r, c]; break outer; }
+
+        const action = {
+          division_id: bestDiv,
+          crew_id: obs.timestep % 2,
+          action_type: bestCount > 0 ? 'SUPPRESS' : 'HOLD',
+          target_cell: targetCell
+        };
+
+        try {
+          const res = await fetch(`${BASE}/step`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(action)
+          });
+          const data = await res.json();
+          lastObs = data.observation;
+          renderState(data.observation, data.reward);
+          if (data.done) { stopAuto(); log('Auto-play done.', 'info'); await fetchGrader(); }
+        } catch (e) { stopAuto(); }
+      }, 300);
+    }
+
+    function stopAuto() {
+      if (autoInterval) clearInterval(autoInterval);
+      autoInterval = null;
+      isPlaying = false;
+      document.getElementById('auto-btn').textContent = '▶ Auto-Play (Baseline)';
+    }
+
+    // ── Refresh state ──
+    async function refreshState() {
+      try {
+        const res = await fetch(`${BASE}/state`);
+        const data = await res.json();
+        // Reconstruct a minimal obs from state
+        const s = data.state;
+        lastObs = { grid: s.grid, wind: s.wind, timestep: s.timestep, containment_pct: s.containment_pct, assets_at_risk: s.assets, crew_positions: s.crews, division_zones: [] };
+        renderState(lastObs, null);
+      } catch (e) { }
+    }
+
+    // ── Render ──
+    function renderState(obs, reward) {
+      renderGrid(obs);
+      renderStats(obs, reward);
+      renderAssets(obs.assets_at_risk || []);
+      renderCrews(obs.crew_positions || []);
+    }
+
+    function renderGrid(obs) {
+      const grid = obs.grid;
+      const assets = obs.assets_at_risk || [];
+      const crews = obs.crew_positions || [];
+
+      const assetCells = new Set(assets.map(a => `${a.cell[0]},${a.cell[1]}`));
+      const crewCells = new Set(crews.map(c => `${c.cell[0]},${c.cell[1]}`));
+
+      const container = document.getElementById('fire-grid');
+      container.innerHTML = '';
+
+      for (let r = 0; r < 20; r++) {
+        for (let c = 0; c < 20; c++) {
+          const val = grid[r][c];
+          const cell = document.createElement('div');
+          cell.className = `cell cell-${val}`;
+          if (val === 1) cell.classList.add('anim');
+          if (assetCells.has(`${r},${c}`)) cell.classList.add('cell-asset');
+          if (crewCells.has(`${r},${c}`)) cell.classList.add('cell-crew');
+          cell.title = `(${r},${c}) = ${['Clear', 'Burning', 'Burnt', 'Firebreak'][val]}`;
+          cell.addEventListener('click', () => {
+            document.getElementById('act-row').value = r;
+            document.getElementById('act-col').value = c;
+          });
+          container.appendChild(cell);
+        }
+      }
+    }
+
+    function renderStats(obs, reward) {
+      document.getElementById('s-timestep').textContent = obs.timestep ?? '—';
+      const pct = ((obs.containment_pct || 0) * 100).toFixed(1);
+      document.getElementById('s-containment').textContent = `${pct}%`;
+      document.getElementById('containment-bar').style.width = `${pct}%`;
+      document.getElementById('s-wind').textContent =
+        obs.wind ? `${obs.wind.direction} · ${obs.wind.speed}` : '—';
+      if (reward !== null) {
+        const rEl = document.getElementById('s-reward');
+        rEl.textContent = reward.toFixed(4);
+        rEl.className = 'stat-value ' + (reward >= 0 ? 'good' : 'bad');
+      }
+      document.getElementById('s-done').textContent = obs.done ? '✅ Yes' : '🔄 No';
+    }
+
+    function renderAssets(assets) {
+      const el = document.getElementById('asset-list');
+      if (!assets.length) {
+        el.innerHTML = '<div style="color:#555;font-size:0.78rem">No assets in this task.</div>';
+        return;
+      }
+      el.innerHTML = assets.map(a => `
     <div class="asset-item">
       <span>🏠 ${a.name}</span>
       <span class="asset-status ${a.status}">${a.status === 'safe' ? '✓ Safe' : '✗ Burned'}</span>
     </div>
   `).join('');
-}
+    }
 
-function renderCrews(crews) {
-  const el = document.getElementById('crew-list');
-  const divLabels = ['A','B','C','D'];
-  el.innerHTML = crews.map(c => `
+    function renderCrews(crews) {
+      const el = document.getElementById('crew-list');
+      const divLabels = ['A', 'B', 'C', 'D'];
+      el.innerHTML = crews.map(c => `
     <div class="crew-item">
       <div class="crew-dot"></div>
       <span>Crew ${c.id}</span>
@@ -680,10 +889,11 @@ function renderCrews(crews) {
       <span class="crew-div">Div ${divLabels[c.division] || c.division}</span>
     </div>
   `).join('');
-}
+    }
 
-// ── Boot ──
-resetEnv();
-</script>
+    // ── Boot ──
+    resetEnv();
+  </script>
 </body>
+
 </html>
